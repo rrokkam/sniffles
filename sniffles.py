@@ -8,7 +8,7 @@ import calendar
 
 import pcap
 from parse import HEADERS, parsePacket
-from timeout import timeout, register_atexit
+import utils
 
 MAX_PACKET_SIZE = 65600  # Bigger than max Ethernet + IP + TCP header size
 
@@ -30,7 +30,7 @@ class Sniffer:
             pcap.printHeaders(file, MAX_PACKET_SIZE)
             printFunc = self.printPcap
         try:
-            with timeout(time):  # raise exception after time seconds
+            with utils.timeout(time):  # raise exception after time seconds
                 while True:
                     data = self.socket.recvfrom(MAX_PACKET_SIZE)[0]
                     printFunc(data, file, protocols)  # might ignore args
@@ -72,12 +72,16 @@ class Sniffer:
 
 
 if __name__ == "__main__":  # TODO : add atexit
-    register_atexit()
+    utils.register_atexit()
 
     parser = argparse.ArgumentParser(prog='sniffles', description='''Sniff packets.
                         Use on a Linux machine. Works with construct 2.9.39.''')
     parser.add_argument('interface', metavar='INTERFACE', default='eth0',
                         help='Interface to listen for traffic on.')
+    parser.add_argument('-t', '--timeout', default=0, type=int,
+                        help='''Time to capture for (in seconds). If 
+                        unspecified, ^C must be sent to close the program.''')
+
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-o', '--outfile', metavar='OUTFILE',
                         help='Write Pcap to a file.')
@@ -85,9 +89,6 @@ if __name__ == "__main__":  # TODO : add atexit
                         help='Write hexdump to stdout.')
     parser.add_argument('-f', '--filter', nargs='+', default=list(HEADERS), choices=list(HEADERS), 
                         help='Write human-readable output for the specified protocol(s) to stdout.')
-    parser.add_argument('-t', '--timeout', default=0, type=int,
-                        help='''Time to capture for (in seconds). If 
-                        unspecified, ^C must be sent to close the program.''')
 
     args = vars(parser.parse_args())
 
