@@ -1,6 +1,11 @@
 import signal
 import sys
 
+def register_atexit():
+    signal.signal(signal.SIGINT, atexit)
+
+def atexit(*_):
+        sys.exit(0)
 
 class timeout:
     def __init__(self, seconds):

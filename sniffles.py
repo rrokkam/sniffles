@@ -71,17 +71,20 @@ class Sniffer:
         return '\n'.join(heads)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # TODO : add atexit
+    register_atexit()
+
     parser = argparse.ArgumentParser(prog='sniffles', description='''Sniff packets.
-                        Use on a UNIX machine. Works with construct 2.9.39.''')
-    parser.add_argument('interface', metavar='INTERFACE',
+                        Use on a Linux machine. Works with construct 2.9.39.''')
+    parser.add_argument('interface', metavar='INTERFACE', default='eth0',
                         help='Interface to listen for traffic on.')
-    parser.add_argument('-o', '--outfile', metavar='OUTFILE',
-                        help='File name to output Pcap to.')
-    parser.add_argument('-x', '--hexdump', action='store_true',
-                        help='Print hexdump to stdout. Overrides -f and -o.')
-    parser.add_argument('-f', '--filter', default=list(HEADERS), nargs='+',
-                        choices=list(HEADERS), help='Filter for a protocol.')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-o', '--outfile', metavar='OUTFILE',
+                        help='Write Pcap to a file.')
+    group.add_argument('-x', '--hexdump', action='store_true',
+                        help='Write hexdump to stdout.')
+    parser.add_argument('-f', '--filter', nargs='+', default=list(HEADERS), choices=list(HEADERS), 
+                        help='Write human-readable output for the specified protocol(s) to stdout.')
     parser.add_argument('-t', '--timeout', default=0, type=int,
                         help='''Time to capture for (in seconds). If 
                         unspecified, ^C must be sent to close the program.''')
