@@ -27,7 +27,7 @@ class Sniffer:
             printFunc = self.printPlainText
         else:
             file = open(outfile, 'wb')
-            pcap.printHeaders(file, self.maxPacketSize)
+            pcap.printHeaders(file, MAX_PACKET_SIZE)
             printFunc = self.printPcap
         try:
             with timeout(time):  # raise exception after time seconds
