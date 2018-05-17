@@ -8,7 +8,7 @@ import calendar
 
 import pcap
 from parse import HEADERS, parsePacket
-from timeout import timeout
+from timeout import timeout, register_atexit
 
 MAX_PACKET_SIZE = 65600  # Bigger than max Ethernet + IP + TCP header size
 
