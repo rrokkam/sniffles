@@ -16,22 +16,14 @@ class IPAddressAdapter(Adapter):
         return [int(o) for o in obj.split('.')]
 
 
-class BytesAdapter(Adapter):
-    def _decode(self, obj, *_):
-        return obj.hex()
-
-    def _encode(self, obj, *_):
-        return bytes.fromhex(obj)
-
-
-ETHERNET_HEAD = Struct(
+ETHERNET = Struct(
     'dest_mac' / MACAddressAdapter(Bytes(6)),
     'src_mac' / MACAddressAdapter(Bytes(6)),
     'ethernet_type' / BytesInteger(2),
-    '_header_length' / Computed(14)
+    '_headerlen' / Computed(14)
 )
 
-ARP_HEAD = Struct(
+ARP = Struct(
     '_start' / Tell,
     'hardware_type' / BytesInteger(2),
     'protocol_type' / BytesInteger(2),
@@ -43,10 +35,10 @@ ARP_HEAD = Struct(
     'target_hw_addr' / MACAddressAdapter(Bytes(this.hardware_addr_len)),
     'target_proto_addr' / IPAddressAdapter(Bytes(this.protocol_addr_len)),
     '_end' / Tell,
-    '_header_length' / Computed(this._end - this._start)
+    '_headerlen' / Computed(this._end - this._start)
 )
 
-IP_HEAD = BitStruct(
+IP = BitStruct(
     'version' / BitsInteger(4),
     'IHL' / BitsInteger(4),
     'DSCP' / BitsInteger(6),
@@ -61,10 +53,10 @@ IP_HEAD = BitStruct(
     'src_ip_addr' / Bytewise(IPAddressAdapter(Bytes(4))),
     'dst_ip_addr' / Bytewise(IPAddressAdapter(Bytes(4))),
     'options' / If(this.IHL > 5, Bytewise(Bytes(this.IHL * 4 - 20))),
-    '_header_length' / Computed(this.IHL * 4)
+    '_headerlen' / Computed(this.IHL * 4)
 )
 
-TCP_HEAD = BitStruct(
+TCP = BitStruct(
     'src_port' / Bytewise(BytesInteger(2)),
     'dest_port' / Bytewise(BytesInteger(2)),
     'seq_num' / Bytewise(BytesInteger(4)),
@@ -81,26 +73,26 @@ TCP_HEAD = BitStruct(
     'SYN' / Flag,
     'FIN' / Flag,
     'options' / If(this.offset > 5,Bytewise(Bytes(this.offset * 4 - 20))),
-    '_header_length' / Computed(this.offset * 4)
+    '_headerlen' / Computed(this.offset * 4)
 )
 
-UDP_HEAD = Struct(
+UDP = Struct(
     'src_port' / BytesInteger(2),
     'dest_port' / BytesInteger(2),
     'length' / BytesInteger(2),
     'checksum' / BytesInteger(2),
-    '_header_length' / Computed(8)
+    '_headerlen' / Computed(8)
 )
 
-HEADERS_CONSTRUCTS = {
-    'Ethernet': ETHERNET_HEAD,
-    'ARP': ARP_HEAD,
-    'IP': IP_HEAD,
-    'TCP': TCP_HEAD,
-    'UDP': UDP_HEAD,
+HEADERS = {
+    'Ethernet': ETHERNET,
+    'ARP': ARP,
+    'IP': IP,
+    'TCP': TCP,
+    'UDP': UDP
 }
 
-HEADERS_CONDITIONS = {
+CONDITIONS = {
     'Ethernet': lambda pkt: True,
     'ARP': lambda pkt: pkt['Ethernet'].ethernet_type == 2054,
     'IP': lambda pkt: pkt['Ethernet'].ethernet_type == 2048,
@@ -108,17 +100,14 @@ HEADERS_CONDITIONS = {
     'UDP': lambda pkt: 'IP' in pkt and pkt['IP'].protocol == 17,
 }
 
-HEADERS = ['Ethernet', 'ARP', 'IP', 'TCP', 'UDP']
-
-
 def parsePacket(data):
     parsed = {}
     offset = 0
     for h in HEADERS:
-        if HEADERS_CONDITIONS[h](parsed):
+        if CONDITIONS[h](parsed):
             try:
-                parsed[h] = HEADERS_CONSTRUCTS[h].parse(data[offset:])
-                offset += parsed[h]._header_length
+                parsed[h] = HEADERS[h].parse(data[offset:])
+                offset += parsed[h]._headerlen
             except StreamError:
                 return None
     return parsed

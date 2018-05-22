@@ -29,6 +29,7 @@ class Sniffer:
             file = open(outfile, 'wb')
             pcap.printHeaders(file, MAX_PACKET_SIZE)
             printFunc = self.printPcap
+        
         try:
             with utils.timeout(time):  # raise exception after time seconds
                 while True:
@@ -67,7 +68,7 @@ class Sniffer:
 
     def packetString(self, packet, protocols):
         heads = [self._headerString(h, packet[h]) for h in HEADERS
-                 if h in protocols and h[0] != '_' and h in packet]
+                 if h in protocols and h[0] != '_' and h in packet]  # nonetype is not iterable
         return '\n'.join(heads)
 
 
@@ -87,7 +88,7 @@ if __name__ == "__main__":  # TODO : add atexit
                         help='Write Pcap to a file.')
     group.add_argument('-x', '--hexdump', action='store_true',
                         help='Write hexdump to stdout.')
-    parser.add_argument('-f', '--filter', nargs='+', default=list(HEADERS), choices=list(HEADERS), 
+    group.add_argument('-f', '--filter', nargs='+', default=list(HEADERS), choices=list(HEADERS), 
                         help='Write human-readable output for the specified protocol(s) to stdout.')
 
     args = vars(parser.parse_args())
