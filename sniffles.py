@@ -7,10 +7,10 @@ from datetime import datetime
 import calendar
 
 import pcap
-from parse import HEADERS, parsePacket
+import parse
 import utils
 
-MAX_PACKET_SIZE = 65600  # Bigger than max Ethernet + IP + TCP header size
+_snaplen = 65600  # Bigger than max Ethernet + IP + TCP header size
 
 
 class Sniffer:
@@ -19,38 +19,33 @@ class Sniffer:
                                     socket.ntohs(0x0003))  # all packets
         self.socket.bind((interface, 0))
 
-    def sniff(self, outfile=None, time=0, dump=False, protocols=HEADERS):
-        file = None
-        if dump:
-            printFunc = self.printHex
-        elif outfile is None:
-            printFunc = self.printPlainText
-        else:
-            file = open(outfile, 'wb')
-            pcap.printHeaders(file, MAX_PACKET_SIZE)
-            printFunc = self.printPcap
-        
+    def sniff(self, mode, time, **kwargs):
+        modes = {
+            'hexdump': hexdump.hexdump,
+            'protocols': print_plaintext,
+            'outfile': print_pcap
+        }
+
+        # need to print header of pcap if outfile
+        if mode == 'outfile':
+            kwargs['outfile'] = open(kwargs['outfile'], 'wb')
+            pcap.print_header(kwargs['outfile'], _snaplen)
+
         try:
             with utils.timeout(time):  # raise exception after time seconds
                 while True:
-                    data = self.socket.recvfrom(MAX_PACKET_SIZE)[0]
-                    printFunc(data, file, protocols)  # might ignore args
+                    data, _ = self.socket.recvfrom(_snaplen)
+                    modes[mode](data, kwargs)
         except TimeoutError:
-            if outfile is not None:  # need to close it
-                file.close()
+            if mode == 'outfile':  # need to close it
+                kwargs['outfile'].close()
 
-    def close(self):
-        self.socket.close()
-
-    def printHex(self, data, *_):
-        hexdump.hexdump(data)
-
-    def printPcap(self, data, file, *_):
+    def print_pcap(self, data, file):
         time = calendar.timegm(datetime.now().timetuple()) * 10**6  # microseconds to seconds
-        pcap.printEnhancedPacket(file, time, data)
+        pcap.print_packet(data, file, time)
 
-    def printPlainText(self, data, file, protocols):
-        packet = parsePacket(data)
+    def print_plaintext(self, data, protocols):
+        packet = parse_packet(data)
         packet_string = self.packetString(packet, protocols)
         if len(packet_string) > 0:
             print(packet_string, end='\n\n')
@@ -67,32 +62,38 @@ class Sniffer:
         return header_name + '(' + ', '.join(pairs) + ')'
 
     def packetString(self, packet, protocols):
-        heads = [self._headerString(h, packet[h]) for h in HEADERS
+        heads = [self._headerString(h, packet[h]) for h in parse.HEADERS
                  if h in protocols and h[0] != '_' and h in packet]  # nonetype is not iterable
         return '\n'.join(heads)
 
-
-if __name__ == "__main__":  # TODO : add atexit
+if __name__ == "__main__":
     utils.register_atexit()
 
     parser = argparse.ArgumentParser(prog='sniffles', description='''Sniff packets.
-                        Use on a Linux machine. Works with construct 2.9.39.''')
-    parser.add_argument('interface', metavar='INTERFACE', default='eth0',
+                        Use on a Linux machine with construct 2.9.39.''')
+    parser.add_argument('interface', metavar='INTERFACE',
                         help='Interface to listen for traffic on.')
     parser.add_argument('-t', '--timeout', default=0, type=int,
-                        help='''Time to capture for (in seconds). If 
+                        help='''Time to capture for (in seconds). If set to 0 or
                         unspecified, ^C must be sent to close the program.''')
 
-    group = parser.add_mutually_exclusive_group(required=True)
+    group = parser.add_mutually_exclusive_group()
     group.add_argument('-o', '--outfile', metavar='OUTFILE',
-                        help='Write Pcap to a file.')
+                        help='Write wireshark-readable pcapng to a file.')
     group.add_argument('-x', '--hexdump', action='store_true',
                         help='Write hexdump to stdout.')
-    group.add_argument('-f', '--filter', nargs='+', default=list(HEADERS), choices=list(HEADERS), 
+    group.add_argument('-f', '--filter', nargs='+', choices=list(parse.HEADERS), 
                         help='Write human-readable output for the specified protocol(s) to stdout.')
 
     args = vars(parser.parse_args())
 
-    sniffer = Sniffer(args['interface'])
-    sniffer.sniff(args['outfile'], args['timeout'],
-                  args['hexdump'], args['filter'])
+    # need to figure out how to find easily which element of a mutually exclusive group was picked.
+
+    sniffer = Sniffer(args.pop['interface'])
+    time = args.pop['timeout']
+    if 'outfile' in args:
+        sniffer.sniff('outfile', time, args)
+    elif 'hexdump' in args:
+        sniffer.sniff('hexdump', time, args)
+    elif 'filter' in args:
+        sniffer.sniff('filter', time, args)

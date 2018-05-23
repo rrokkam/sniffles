@@ -13,7 +13,7 @@ class timeout:
 
     def __enter__(self):
         try:
-            signal.signal(signal.SIGALRM, self.onAlarm)
+            signal.signal(signal.SIGALRM, self.on_alarm)
         except ValueError:
             sys.exit("Could not set an alarm")  # sigalrm is unix-only
         signal.alarm(self.seconds)
@@ -21,5 +21,5 @@ class timeout:
     def __exit__(self, *_):
         signal.alarm(0)  # 0 cancels any alarms previously set
 
-    def onAlarm(self, *_):
+    def on_alarm(self, *_):
         raise TimeoutError()  # catch this when parsing

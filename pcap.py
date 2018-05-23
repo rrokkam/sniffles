@@ -31,15 +31,15 @@ ENHANCED_PACKET = AlignedStruct(4,
 )
 
 
-def printHeaders(file, maxsize):
+def write_header(file, maxsize):
     section_header = SECTION_HEADER.build(None)
     file.write(section_header)
     interface_description = INTERFACE_DESCRIPTION.build(dict(snap_len=maxsize))
     file.write(interface_description)
 
 
-def printEnhancedPacket(file, time, packet):
-    blocklen = len(packet) + 32 # length of the rest of ENHANCED_PACKET
+def write_packet(packet, file, time):
+    blocklen = len(packet) + 32  # length of the rest of ENHANCED_PACKET
     enhanced_packet = ENHANCED_PACKET.build(dict(block_total_length=blocklen, 
         timestamp=time, captured_packet_length=len(packet), 
         original_packet_length=len(packet), packet_data=packet))
