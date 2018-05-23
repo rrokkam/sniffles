@@ -38,10 +38,10 @@ def write_header(file, maxsize):
     file.write(interface_description)
 
 
-def write_packet(packet, file, time):
+def write_packet(packet, file):
     enhanced_packet = ENHANCED_PACKET.build(dict(
         block_total_length=len(packet) + 32,  # length of the rest of ENHANCED_PACKET
-        timestamp=time, 
+        timestamp=utils.current_time(), 
         captured_packet_length=len(packet), 
         original_packet_length=len(packet), 
         packet_data=packet))

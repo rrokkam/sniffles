@@ -10,11 +10,11 @@ class Sniffer:
     def __init__(self, interface):
         self.socket = utils.raw_socket(interface)
 
-    def sniff(self, mode, time, **kwargs):
+    def sniff(self, mode='filter', time=0, **kwargs):
         modes = {
             'hexdump': hexdump.hexdump,
-            'protocols': _print_plaintext,
-            'outfile': _print_pcap
+            'filter': _print_plaintext,
+            'outfile': pcap.print_packet
         }
 
         # need to print header of pcap if outfile
@@ -27,12 +27,9 @@ class Sniffer:
                 while True:
                     data, _ = self.socket.recvfrom(_snaplen)
                     modes[mode](data, kwargs)
-        except TimeoutError, KeyboardInterrupt:
+        except TimeoutError: #, KeyboardInterrupt:
             if mode == 'outfile':  # need to close it
                 kwargs['outfile'].close()
-
-    def _print_pcap(self, data, file):
-        pcap.print_packet(data, file, utils.current_time())
 
     def _print_plaintext(self, data, protocols):
         packet = parse_packet(data)
