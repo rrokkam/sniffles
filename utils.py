@@ -1,11 +1,17 @@
 import signal
 import sys
 
-def register_atexit():
-    signal.signal(signal.SIGINT, atexit)
+from datetime import datetime
+import calendar
 
-def atexit(*_):
-        sys.exit(0)
+def raw_socket(interface, bind_addr=0):
+    socket = socket.socket(socket.AF_PACKET, socket.SOCK_RAW,
+                                    socket.ntohs(0x0003))  # all packets
+    socket.bind((interface, bind_addr))
+    return socket
+
+def current_time():
+    return calendar.timegm(datetime.now().timetuple()) * 10**6  # microseconds to seconds
 
 class timeout:
     def __init__(self, seconds):
