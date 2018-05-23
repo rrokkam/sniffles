@@ -1,6 +1,6 @@
 import signal
 import sys
-
+import socket
 from datetime import datetime
 import calendar
 
@@ -18,10 +18,7 @@ class timeout:
         self.seconds = seconds
 
     def __enter__(self):
-        try:
-            signal.signal(signal.SIGALRM, self.on_alarm)
-        except ValueError:
-            sys.exit("Could not set an alarm")  # sigalrm is unix-only
+        signal.signal(signal.SIGALRM, self.on_alarm) # sigalrm is unix-only
         signal.alarm(self.seconds)
 
     def __exit__(self, *_):
