@@ -5,13 +5,12 @@ from datetime import datetime
 import calendar
 
 def raw_socket(interface, bind_addr=0):
-    socket = socket.socket(socket.AF_PACKET, socket.SOCK_RAW,
-                                    socket.ntohs(0x0003))  # all packets
-    socket.bind((interface, bind_addr))
-    return socket
+    s = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(0x0003))
+    s.bind((interface, bind_addr))
+    return s
 
 def current_time():
-    return calendar.timegm(datetime.now().timetuple()) * 10**6  # microseconds to seconds
+    return calendar.timegm(datetime.now().timetuple()) * 10**6  # microseconds
 
 class timeout:
     def __init__(self, seconds):
