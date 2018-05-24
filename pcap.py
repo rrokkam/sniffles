@@ -1,4 +1,6 @@
 from construct import *
+import calendar
+from datetime import datetime
 
 SECTION_HEADER = Struct(
     'block_type' / Const(bytes.fromhex('0A0D0D0A')),
@@ -19,30 +21,36 @@ INTERFACE_DESCRIPTION = Struct(
     'block_total_length' / Const(bytes.fromhex('00000014'))
 )
 
-ENHANCED_PACKET = AlignedStruct(4, 
-    'block_type' / Const(bytes.fromhex('00000006')),
-    'block_total_length' / BytesInteger(4),
-    'interface_id' / Const(bytes.fromhex('00000000')), # only support one IDB
-    'timestamp' / BytesInteger(8),
-    'captured_packet_length' / BytesInteger(4),
-    'original_packet_length' / BytesInteger(4),
-    'packet_data' / Bytes(this.captured_packet_length),
-    'block_total_length' / BytesInteger(4)
-)
+ENHANCED_PACKET = AlignedStruct(4,
+                                'block_type' /
+                                Const(bytes.fromhex('00000006')),
+                                'block_total_length' / BytesInteger(4),
+                                # only support one IDB
+                                'interface_id' / \
+                                Const(bytes.fromhex('00000000')),
+                                'timestamp' / BytesInteger(8),
+                                'captured_packet_length' / BytesInteger(4),
+                                'original_packet_length' / BytesInteger(4),
+                                'packet_data' / \
+                                Bytes(this.captured_packet_length),
+                                'block_total_length' / BytesInteger(4)
+                                )
 
 
-def write_header(file, maxsize):
+def print_header(file, maxsize):
     section_header = SECTION_HEADER.build(None)
     file.write(section_header)
     interface_description = INTERFACE_DESCRIPTION.build(dict(snap_len=maxsize))
     file.write(interface_description)
 
 
-def write_packet(packet, file):
+def print_packet(packet, file):
+    time = calendar.timegm(datetime.now().timetuple()) * 10**6  # microseconds
     enhanced_packet = ENHANCED_PACKET.build(dict(
-        block_total_length=len(packet) + 32,  # length of the rest of ENHANCED_PACKET
-        timestamp=utils.current_time(), 
-        captured_packet_length=len(packet), 
-        original_packet_length=len(packet), 
+        # length of the rest of ENHANCED_PACKET
+        block_total_length=len(packet) + 32,
+        timestamp=time,
+        captured_packet_length=len(packet),
+        original_packet_length=len(packet),
         packet_data=packet))
     file.write(enhanced_packet)

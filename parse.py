@@ -1,5 +1,6 @@
 from construct import *
 
+
 class MACAddressAdapter(Adapter):
     def _decode(self, obj, *_):
         return ':'.join(['{:02x}'.format(o) for o in obj])
@@ -14,6 +15,7 @@ class IPAddressAdapter(Adapter):
 
     def _encode(self, obj, *_):
         return [int(o) for o in obj.split('.')]
+
 
 HEADERS = {
     'Ethernet': Struct(
@@ -72,10 +74,10 @@ HEADERS = {
         'RST' / Flag,
         'SYN' / Flag,
         'FIN' / Flag,
-        'options' / If(this.offset > 5,Bytewise(Bytes(this.offset * 4 - 20))),
+        'options' / If(this.offset > 5, Bytewise(Bytes(this.offset * 4 - 20))),
         '_headerlen' / Computed(this.offset * 4)
     ),
-    
+
     'UDP': Struct(
         'src_port' / BytesInteger(2),
         'dest_port' / BytesInteger(2),
@@ -93,6 +95,15 @@ CONDITIONS = {
     'UDP': lambda packet: 'IP' in packet and packet['IP'].protocol == 17,
 }
 
+
+def print_plaintext(self, data, protocols):
+    packet = parse_packet(data)
+    if packet is not None:
+        string = '\n'.join([header(h, packet[h]) for h in HEADERS
+                            if h in protocols and h in packet])
+        print(string, end='\n\n')
+
+
 def parse_packet(data):
     packet = {}
     offset = 0
@@ -104,3 +115,9 @@ def parse_packet(data):
             except StreamError:
                 return None
     return packet
+
+
+def header(self, header_name, header):
+    pairs = ['{}={}'.format(k, v) for k, v in header.items()
+             if not k.startswith('_')]
+    return header_name + '(' + ', '.join(pairs) + ')'
