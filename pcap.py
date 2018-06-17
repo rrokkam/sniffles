@@ -37,10 +37,10 @@ ENHANCED_PACKET = AlignedStruct(4,
                                 )
 
 
-def print_header(file, maxsize):
+def print_header(file, _snaplen):
     section_header = SECTION_HEADER.build(None)
     file.write(section_header)
-    interface_description = INTERFACE_DESCRIPTION.build(dict(snap_len=maxsize))
+    interface_description = INTERFACE_DESCRIPTION.build(dict(snap_len=_snaplen))
     file.write(interface_description)
 
 

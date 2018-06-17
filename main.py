@@ -17,7 +17,7 @@ if __name__ == "__main__":
     format_parser = parser.add_mutually_exclusive_group()
     format_parser.add_argument('-f', '--file', metavar='FILE',
                         help='File name to output Pcap to.')
-    format_parser.add_argument('-x', '--hexdump', action='store_true',
+    format_parser.add_argument('-x', '--hex', action='store_true',
                         help='Print hexdump to stdout. Overrides -f and -o.')
     format_parser.add_argument('-p', '--protocols', nargs='+',
                         default=list(parse.HEADERS), choices=list(parse.HEADERS), 
@@ -27,4 +27,4 @@ if __name__ == "__main__":
 
     sniffer = sniffles.Sniffer(args.interface)
     sniffer.sniff(args.timeout, args.file,
-                  args.hexdump, args.protocols)
+                args.protocols, args.hex)
