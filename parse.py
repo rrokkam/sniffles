@@ -96,14 +96,6 @@ CONDITIONS = {
 }
 
 
-def print_plaintext(packet, _, protocols):
-    parsed = parse_packet(packet)
-    if parsed is not None:
-        formatted = '\n'.join([header(h, parsed[h]) for h in HEADERS
-                            if h in protocols and h in parsed])
-        print(formatted, end='\n\n')
-
-
 def parse_packet(packet):
     parsed = {}
     offset = 0
@@ -117,7 +109,15 @@ def parse_packet(packet):
     return parsed
 
 
+def print_plaintext(packet, _, protocols):
+    parsed = parse_packet(packet)
+    if parsed is not None:
+        formatted = '\n'.join([header(h, parsed[h]) for h in HEADERS
+                            if h in protocols and h in parsed])
+        print(formatted, end='\n\n')
+
+
 def header(name, header):
     pairs = ['{}={}'.format(k, v) for k, v in header.items()
              if not k.startswith('_')]
-    return header_name + '(' + ', '.join(pairs) + ')'
+    return name + '(' + ', '.join(pairs) + ')'
