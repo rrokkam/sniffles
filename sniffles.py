@@ -1,10 +1,10 @@
-import hexdump
 import socket
+import hexdump
 import pcap
 import parse
 from timeout import timeout
 
-_snaplen = 65600  # Bigger than max Ethernet + IP + TCP header size
+_snaplen = 65600  # Just over max Ethernet + IP + TCP header size
 
 
 class Sniffer:

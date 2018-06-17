@@ -1,6 +1,6 @@
-from construct import *
 import calendar
 from datetime import datetime
+from construct import *
 
 SECTION_HEADER = Struct(
     'block_type' / Const(bytes.fromhex('0A0D0D0A')),
