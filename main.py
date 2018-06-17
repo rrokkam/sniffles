@@ -28,11 +28,11 @@ if __name__ == '__main__':
     kwargs = vars(parser.parse_args())
     sniffer = sniffles.Sniffer(kwargs.pop('interface'))
     timeout = kwargs.pop('timeout')
-        
+
     if kwargs.pop('hexdump'):
         sniffer.sniff('hexdump', timeout, **kwargs)
-    elif kwargs['outfile'] is None:  # filter
+    elif kwargs['outfile'] is not None:
+        sniffer.sniff('outfile', timeout, **kwargs)
+    else:  # outfile
         kwargs['protocols'] = list(parse.HEADERS)
         sniffer.sniff('protocols', timeout, **kwargs)
-    else:
-        sniffer.sniff('outfile', timeout, **kwargs)
