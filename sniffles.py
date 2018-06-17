@@ -28,8 +28,7 @@ class Sniffer:
             with timeout(time):  # raise exception after time seconds
                 while True:
                     data, _ = self.socket.recvfrom(_snaplen)
-                    print(kwargs)
-                    modes[mode](data, kwargs)
+                    modes[mode](data, **kwargs)
         except (TimeoutError, KeyboardInterrupt):
             if mode == 'outfile':
                 kwargs['outfile'].close()
