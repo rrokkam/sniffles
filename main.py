@@ -20,7 +20,8 @@ if __name__ == "__main__":
     format_parser.add_argument('-x', '--hexdump', action='store_true',
                         help='Print hexdump to stdout. Overrides -f and -o.')
     format_parser.add_argument('-p', '--protocols', nargs='+',
-                        choices=list(parse.HEADERS), help='Filter for a protocol.')
+                        default=list(parse.HEADERS), choices=list(parse.HEADERS), 
+                        help='Filter for a protocol.')
 
     args = parser.parse_args()
 
