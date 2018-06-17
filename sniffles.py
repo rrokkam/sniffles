@@ -3,7 +3,7 @@ import socket
 import argparse
 import hexdump
 import pcap
-import parse
+import plaintext
 from timeout import timeout
 
 _snaplen = 65600  # Just over max Ethernet + IP + TCP header size
@@ -15,13 +15,13 @@ class Sniffer:
             socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(0x0003))
         self.socket.bind((interface, 0))
 
-    def sniff(self, time=0, file=None, protocols=parse.HEADERS, dump=False):
+    def sniff(self, time=0, pcapfile=None, protocols=plaintext.HEADERS, dump=False):
         if file is not None:
             file = open(file, 'wb')
             pcap.write_header(file, _snaplen)
             print_mode = pcap.write_packet
         elif not dump:  # prefer using plaintext to hexdump
-            print_mode = parse.print_plaintext
+            print_mode = plaintext.print_plaintext
         else:
             print_mode = lambda packet, *_: hexdump.hexdump(packet)
 
@@ -47,16 +47,17 @@ if __name__ == "__main__":
                         unspecified, ^C must be sent to close the program.''')
 
     format_parser = parser.add_mutually_exclusive_group()
-    format_parser.add_argument('-f', '--file', metavar='FILE',
-                        help='File name to output Pcap to.')
+    format_parser.add_argument('-f', '--pcapfile', metavar='PCAPFILE',
+                        help='Takes an arguments for the file name to output Pcap to.')
+    format_parser.add_argument('-p', '--plaintext', nargs='*',
+                        default=list(plaintext.HEADERS), choices=list(plaintext.HEADERS), 
+                        help='''Print plaintext, with optional filtering for types 
+                            of packets.''')
     format_parser.add_argument('-x', '--hexdump', action='store_true',
                         help='Print hexdump to stdout. Overrides -f and -o.')
-    format_parser.add_argument('-p', '--protocols', nargs='*',
-                        default=list(parse.HEADERS), choices=list(parse.HEADERS), 
-                        help='Filter for a protocol.')
 
     args = parser.parse_args()
 
     sniffer = Sniffer(args.interface)
-    sniffer.sniff(args.timeout, args.file,
-                args.protocols, args.hexdump)
+    sniffer.sniff(args.timeout, args.pcapfile,
+                  args.plaintext, args.hexdump)
