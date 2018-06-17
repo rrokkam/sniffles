@@ -1,4 +1,5 @@
 import hexdump
+import socket
 import pcap
 import parse
 from timeout import timeout
