@@ -96,12 +96,12 @@ CONDITIONS = {
 }
 
 
-def print_plaintext(self, data, protocols):
-    packet = parse_packet(data)
-    if packet is not None:
-        string = '\n'.join([header(h, packet[h]) for h in HEADERS
-                            if h in protocols and h in packet])
-        print(string, end='\n\n')
+def print_plaintext(self, packet, protocols):
+    parsed = parse_packet(packet)
+    if parsed is not None:
+        formatted = '\n'.join([header(h, parsed[h]) for h in HEADERS
+                            if h in protocols and h in parsed])
+        print(formatted, end='\n\n')
 
 
 def parse_packet(data):

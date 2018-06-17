@@ -13,22 +13,21 @@ class Sniffer:
             socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(0x0003))
         self.socket.bind((interface, 0))
 
-    def sniff(self, mode='protocols', time=0, **kwargs):
-        modes = {
-            'hexdump': hexdump.hexdump,
-            'outfile': pcap.print_packet,
-            'protocols': parse.print_plaintext,
-        }
-
-        if mode == 'outfile':
-            kwargs['outfile'] = open(kwargs['outfile'], 'wb')
-            pcap.print_header(kwargs['outfile'], _snaplen)
+    def sniff(self, time=0, file=None, hex=False, protocols=parse.HEADERS):
+        if file is not None:
+            file = open(file, 'wb')
+            pcap.printHeaders(file, _snaplen)
+            print_mode = pcap.print_packet
+        elif hexdump:
+            print_mode = lambda packet, *_: hexdump.hexdump(packet)
+        else:
+            print_mode = parse.print_plaintext
 
         try:
-            with timeout(time):  # raise exception after time seconds
+            with timeout(time):
                 while True:
-                    data, _ = self.socket.recvfrom(_snaplen)
-                    modes[mode](data, **kwargs)
-        except (TimeoutError, KeyboardInterrupt):
-            if mode == 'outfile':
-                kwargs['outfile'].close()
+                    packet, _ = self.socket.recvfrom(_snaplen)
+                    print_mode(packet, file, protocols)
+        except TimeoutError:
+            if file is not None:
+                file.close()

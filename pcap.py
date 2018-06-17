@@ -44,7 +44,7 @@ def print_header(file, maxsize):
     file.write(interface_description)
 
 
-def print_packet(packet, file):
+def print_packet(packet, file, *_):
     time = calendar.timegm(datetime.now().timetuple()) * 10**6  # microseconds
     enhanced_packet = ENHANCED_PACKET.build(dict(
         # length of the rest of ENHANCED_PACKET
