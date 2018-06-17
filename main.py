@@ -19,7 +19,7 @@ if __name__ == '__main__':
                                help='Write hexdump to stdout.')
     format_parser.add_argument('-o', '--outfile', metavar='OUTFILE',
                                help='Write pcapng to a file.')
-    format_parser.add_argument('-f', '--filter', nargs='+',
+    format_parser.add_argument('-p', '--protocols', nargs='+',
                                default=list(parse.HEADERS),
                                choices=list(parse.HEADERS),
                                help='''Write human-readable output for the 
@@ -28,15 +28,11 @@ if __name__ == '__main__':
     kwargs = vars(parser.parse_args())
     sniffer = sniffles.Sniffer(kwargs.pop('interface'))
     timeout = kwargs.pop('timeout')
-    
-    # Would be nice to find a cleaner way of determining which of the mutually
-    # exclusive args was passed.
-    
+        
     if kwargs.pop('hexdump'):
         sniffer.sniff('hexdump', timeout, **kwargs)
     elif kwargs['outfile'] is None:  # filter
-        if 'filter' not in kwargs:
-            kwargs['filter'] = list(parse.HEADERS)
-        sniffer.sniff('filter', timeout, **kwargs)
+        kwargs['protocols'] = list(parse.HEADERS)
+        sniffer.sniff('protocols', timeout, **kwargs)
     else:
         sniffer.sniff('outfile', timeout, **kwargs)

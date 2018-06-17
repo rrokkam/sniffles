@@ -13,11 +13,11 @@ class Sniffer:
             socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(0x0003))
         self.socket.bind((interface, 0))
 
-    def sniff(self, mode='filter', time=0, **kwargs):
+    def sniff(self, mode='protocols', time=0, **kwargs):
         modes = {
             'hexdump': hexdump.hexdump,
             'outfile': pcap.print_packet,
-            'filter': parse.print_plaintext,
+            'protocols': parse.print_plaintext,
         }
 
         if mode == 'outfile':
