@@ -110,17 +110,14 @@ def parse_packet(packet):
     for h in HEADERS:
         if CONDITIONS[h](parsed):
             try:
-                header = packet[offset:]
-                print(header)
-                print(HEADERS[h])
-                parsed[h] = HEADERS[h].parse(header)
+                parsed[h] = HEADERS[h].parse(packet[offset:])
                 offset += parsed[h]._headerlen
             except StreamError:
                 return None
     return parsed
 
 
-def header(self, header_name, header):
+def header(header_name, header):
     pairs = ['{}={}'.format(k, v) for k, v in header.items()
              if not k.startswith('_')]
     return header_name + '(' + ', '.join(pairs) + ')'
