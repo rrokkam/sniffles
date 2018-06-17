@@ -34,19 +34,16 @@ ENHANCED_PACKET = AlignedStruct(4,
 
 
 def write_header(file, snaplen):
-    section_header = SECTION_HEADER.build(None)
-    file.write(section_header)
-    interface_description = INTERFACE_DESCRIPTION.build(dict(snap_len=snaplen))
-    file.write(interface_description)
+    file.write(SECTION_HEADER.build(None))
+    file.write(INTERFACE_DESCRIPTION.build(dict(snap_len=snaplen)))
 
 
 def write_packet(packet, file, _):
     time = calendar.timegm(datetime.now().timetuple()) * 10**6  # microseconds
-    enhanced_packet = ENHANCED_PACKET.build(dict(
+    file.write(ENHANCED_PACKET.build(dict(
         # length of the rest of ENHANCED_PACKET
         block_total_length=len(packet) + 32,
         timestamp=time,
         captured_packet_length=len(packet),
         original_packet_length=len(packet),
-        packet_data=packet))
-    file.write(enhanced_packet)
+        packet_data=packet)))
