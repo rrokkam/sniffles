@@ -30,7 +30,7 @@ class Sniffer:
                 while True:
                     packet, _ = self.socket.recvfrom(_snaplen)
                     print_mode(packet, file, protocols)
-        except TimeoutError:
+        except (TimeoutError, KeyboardInterrupt):
             if file is not None:
                 file.close()
 
