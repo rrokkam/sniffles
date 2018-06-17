@@ -22,29 +22,25 @@ INTERFACE_DESCRIPTION = Struct(
 )
 
 ENHANCED_PACKET = AlignedStruct(4,
-                                'block_type' /
-                                Const(bytes.fromhex('00000006')),
-                                'block_total_length' / BytesInteger(4),
-                                # only support one IDB
-                                'interface_id' / \
-                                Const(bytes.fromhex('00000000')),
-                                'timestamp' / BytesInteger(8),
-                                'captured_packet_length' / BytesInteger(4),
-                                'original_packet_length' / BytesInteger(4),
-                                'packet_data' / \
-                                Bytes(this.captured_packet_length),
-                                'block_total_length' / BytesInteger(4)
-                                )
+    'block_type' / Const(bytes.fromhex('00000006')),
+    'block_total_length' / BytesInteger(4),
+    'interface_id' / Const(bytes.fromhex('00000000')),
+    'timestamp' / BytesInteger(8),
+    'captured_packet_length' / BytesInteger(4),
+    'original_packet_length' / BytesInteger(4),
+    'packet_data' / Bytes(this.captured_packet_length),
+    'block_total_length' / BytesInteger(4)
+)
 
 
-def print_header(file, _snaplen):
+def write_header(file, snaplen):
     section_header = SECTION_HEADER.build(None)
     file.write(section_header)
-    interface_description = INTERFACE_DESCRIPTION.build(dict(snap_len=_snaplen))
+    interface_description = INTERFACE_DESCRIPTION.build(dict(snap_len=snaplen))
     file.write(interface_description)
 
 
-def print_packet(packet, file, _):
+def write_packet(packet, file, _):
     time = calendar.timegm(datetime.now().timetuple()) * 10**6  # microseconds
     enhanced_packet = ENHANCED_PACKET.build(dict(
         # length of the rest of ENHANCED_PACKET

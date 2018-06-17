@@ -117,7 +117,7 @@ def parse_packet(packet):
     return parsed
 
 
-def header(header_name, header):
+def header(name, header):
     pairs = ['{}={}'.format(k, v) for k, v in header.items()
              if not k.startswith('_')]
     return header_name + '(' + ', '.join(pairs) + ')'
