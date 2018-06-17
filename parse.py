@@ -110,7 +110,10 @@ def parse_packet(packet):
     for h in HEADERS:
         if CONDITIONS[h](parsed):
             try:
-                parsed[h] = HEADERS[h].parse(bytes(packet[offset:]))
+                header = packet[offset:]
+                print(header)
+                print(HEADERS[h])
+                parsed[h] = HEADERS[h].parse(header)
                 offset += parsed[h]._headerlen
             except StreamError:
                 return None
