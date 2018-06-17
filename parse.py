@@ -96,28 +96,22 @@ CONDITIONS = {
 }
 
 
-def parse_packet(packet):
+def print_plaintext(packet, _, protocols):
     parsed = {}
     offset = 0
-    for h in HEADERS:
-        if CONDITIONS[h](parsed):
-            try:
-                parsed[h] = HEADERS[h].parse(packet[offset:])
-                offset += parsed[h]._headerlen
-            except StreamError:
-                return None
-    return parsed
+    try:
+        for head in HEADERS:
+            if CONDITIONS[head](parsed):
+                parsed[head] = HEADERS[head].parse(packet[offset:])
+                offset += parsed[head]._headerlen
+    except StreamError:
+        return  # ignore garbled packet
+
+    print('\n'.join([header(head, parsed[head]) for head in parsed
+                     if head in protocols]), end='\n\n')
 
 
-def print_plaintext(packet, _, protocols):
-    parsed = parse_packet(packet)
-    if parsed is not None:
-        formatted = '\n'.join([header(h, parsed[h]) for h in HEADERS
-                            if h in protocols and h in parsed])
-        print(formatted, end='\n\n')
-
-
-def header(name, header):
-    pairs = ['{}={}'.format(k, v) for k, v in header.items()
+def header(head, body):
+    pairs = ['{}={}'.format(k, v) for k, v in body.items()
              if not k.startswith('_')]
-    return name + '(' + ', '.join(pairs) + ')'
+    return '{}({})'.format(head, ', '.join(pairs))
