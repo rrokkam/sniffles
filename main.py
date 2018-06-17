@@ -14,7 +14,7 @@ if __name__ == '__main__':
                         help='''Time to capture for (in seconds). If set to 0 or
                         unspecified, ^C must be sent to close the program.''')
     
-    format_parser = parser.add_mutually_exclusive_group(required=True)
+    format_parser = parser.add_mutually_exclusive_group()
     format_parser.add_argument('-x', '--hexdump', action='store_true',
                                help='Write hexdump to stdout.')
     format_parser.add_argument('-o', '--outfile', metavar='OUTFILE',
