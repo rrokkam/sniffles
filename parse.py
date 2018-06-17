@@ -104,17 +104,17 @@ def print_plaintext(self, packet, protocols):
         print(formatted, end='\n\n')
 
 
-def parse_packet(data):
-    packet = {}
+def parse_packet(packet):
+    parsed = {}
     offset = 0
     for h in HEADERS:
-        if CONDITIONS[h](packet):
+        if CONDITIONS[h](parsed):
             try:
-                packet[h] = HEADERS[h].parse(packet[offset:])
-                offset += packet[h]._headerlen
+                parsed[h] = HEADERS[h].parse(bytes(packet[offset:]))
+                offset += parsed[h]._headerlen
             except StreamError:
                 return None
-    return packet
+    return parsed
 
 
 def header(self, header_name, header):
